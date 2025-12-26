@@ -231,48 +231,62 @@ export function notifyError(message: string, e?: any): void {
   }
 }
 
+/**
+ * Parses a PGP signed message to extract the clear text message and signature.
+ * 
+ * @param pgpMessage - The complete PGP signed message string
+ * @returns An object containing the extracted message and signature
+ * @throws {Error} If the input is invalid or the PGP message format is incorrect
+ * 
+ * Expected PGP message format:
+ * -----BEGIN PGP SIGNED MESSAGE-----
+ * Hash: SHA256
+ * 
+ * <message content>
+ * -----BEGIN PGP SIGNATURE-----
+ * <signature>
+ * -----END PGP SIGNATURE-----
+ */
 export function parsePgpSignedMessage(pgpMessage: string): { message: string; signature: string } {
-  // Parse PGP signed message to extract the message content and signature
-  // Expected format:
-  // -----BEGIN PGP SIGNED MESSAGE-----
-  // Hash: SHA256
-  //
-  // <message content>
-  // -----BEGIN PGP SIGNATURE-----
-  // <signature>
-  // -----END PGP SIGNATURE-----
+  // Validate input
+  if (!pgpMessage || typeof pgpMessage !== 'string') {
+    throw new Error('Invalid input: PGP message must be a non-empty string');
+  }
+  
+  // Normalize line endings to handle Windows (\r\n) and Unix (\n) formats
+  const normalizedMessage = pgpMessage.replace(/\r\n/g, '\n');
   
   const beginMessage = '-----BEGIN PGP SIGNED MESSAGE-----';
   const beginSignature = '-----BEGIN PGP SIGNATURE-----';
   const endSignature = '-----END PGP SIGNATURE-----';
   
-  if (!pgpMessage.includes(beginMessage)) {
-    throw new Error('Invalid PGP signed message: missing BEGIN PGP SIGNED MESSAGE marker');
+  if (!normalizedMessage.includes(beginMessage)) {
+    throw new Error('無效的 PGP 簽署訊息：缺少開始標記');
   }
   
   // Find the message content
-  const messageHeaderEnd = pgpMessage.indexOf('\n\n', pgpMessage.indexOf(beginMessage));
+  const messageHeaderEnd = normalizedMessage.indexOf('\n\n', normalizedMessage.indexOf(beginMessage));
   if (messageHeaderEnd === -1) {
-    throw new Error('Invalid PGP signed message: malformed header');
+    throw new Error('無效的 PGP 簽署訊息：標頭格式錯誤');
   }
   const messageStart = messageHeaderEnd + 2;
   
-  const messageEnd = pgpMessage.indexOf(beginSignature);
+  const messageEnd = normalizedMessage.indexOf(beginSignature);
   if (messageEnd === -1) {
-    throw new Error('Invalid PGP signed message: missing BEGIN PGP SIGNATURE marker');
+    throw new Error('無效的 PGP 簽署訊息：缺少簽章開始標記');
   }
   
-  const message = pgpMessage.substring(messageStart, messageEnd).trim();
+  const message = normalizedMessage.substring(messageStart, messageEnd).trim();
   
   // Extract the full signature block
-  const signatureStart = pgpMessage.indexOf(beginSignature);
-  const signatureEndPos = pgpMessage.indexOf(endSignature);
+  const signatureStart = normalizedMessage.indexOf(beginSignature);
+  const signatureEndPos = normalizedMessage.indexOf(endSignature);
   
   if (signatureEndPos === -1) {
-    throw new Error('Invalid PGP signed message: missing END PGP SIGNATURE marker');
+    throw new Error('無效的 PGP 簽署訊息：缺少簽章結束標記');
   }
   
-  const signature = pgpMessage.substring(signatureStart, signatureEndPos + endSignature.length);
+  const signature = normalizedMessage.substring(signatureStart, signatureEndPos + endSignature.length);
   
   return { message, signature };
 }

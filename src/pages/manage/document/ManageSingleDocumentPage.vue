@@ -224,16 +224,22 @@ async function submitContent() {
     
     if (usePgpSignature.value) {
       // Parse PGP signed message
-      const { message, signature } = parsePgpSignedMessage(pgpSignedContent.value);
-      updateData.content = message;
-      updateData.usePgpSignature = true;
-      updateData.pgpSignedContent = pgpSignedContent.value;
-      updateData.pgpSignature = signature;
+      try {
+        const { message, signature } = parsePgpSignedMessage(pgpSignedContent.value);
+        updateData.content = message;
+        updateData.usePgpSignature = true;
+        updateData.pgpSignedContent = pgpSignedContent.value;
+        updateData.pgpSignature = signature;
+      } catch (parseError) {
+        Loading.hide();
+        notifyError('PGP 簽署訊息解析失敗', parseError);
+        return;
+      }
     } else {
       updateData.content = content.value;
       updateData.usePgpSignature = false;
-      updateData.pgpSignedContent = null;
-      updateData.pgpSignature = null;
+      updateData.pgpSignedContent = '';
+      updateData.pgpSignature = '';
     }
     
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), updateData);
