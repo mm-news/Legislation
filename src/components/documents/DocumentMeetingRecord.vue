@@ -9,6 +9,10 @@
       <div>會議記錄：{{ doc.secretarySpecific?.signatureTitle ?? doc.secretarySpecific?.translation }} {{doc.secretaryName}}</div>
       <div v-if="doc.meetingTime">會議時間：{{ doc.meetingTime.toLocaleString() }}</div>
       <div>地點：{{doc.location}}</div>
+      <div v-if="doc.usePgpSignature" class="q-mt-sm q-pa-sm bg-green-2 text-green-9 rounded-borders">
+        <q-icon name="verified" size="sm" class="q-mr-xs" />
+        簽章已驗證（TBD）
+      </div>
     </div>
     <DocumentSeparator/>
     <div v-html="customSanitize(doc.content)"></div>

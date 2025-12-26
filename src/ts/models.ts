@@ -38,6 +38,9 @@ export interface Document {
   publishedAt?: Date | null;
   meetingTime?: Date | null;
   prosecutionId?: string;
+  usePgpSignature?: boolean;
+  pgpSignedContent?: string;
+  pgpSignature?: string;
 
   getFullId(): string;
 }
@@ -419,6 +422,11 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.published) delete data.publishedAt;
     if (!data.meetingTime) delete data.meetingTime;
     if (!data.prosecutionId) delete data.prosecutionId;
+    if (!data.usePgpSignature) {
+      delete data.usePgpSignature;
+      delete data.pgpSignedContent;
+      delete data.pgpSignature;
+    }
     return data;
   },
   fromFirestore(snapshot, options) {

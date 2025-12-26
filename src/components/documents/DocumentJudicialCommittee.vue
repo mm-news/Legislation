@@ -7,6 +7,10 @@
       <div v-if="doc.type.firebase==DocumentType.JudicialCommitteeExplanation.firebase">{{ doc.fromSpecific.translation }}</div>
     </h1>
     <div class="text-right">{{ doc.getFullId() }}</div>
+    <div v-if="doc.usePgpSignature" class="q-mt-sm q-pa-sm bg-green-2 text-green-9 rounded-borders">
+      <q-icon name="verified" size="sm" class="q-mr-xs" />
+      簽章已驗證（TBD）
+    </div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>
 </template>

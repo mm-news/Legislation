@@ -74,7 +74,17 @@
         <div class="text-h5 q-ma-none">編輯內文</div>
       </q-card-section>
       <q-card-section style="max-height: 80vh; overflow-y: auto">
-        <ProEditor v-model="content" />
+        <q-checkbox v-model="usePgpSignature" label="使用簽章" />
+        <q-input 
+          v-if="usePgpSignature" 
+          v-model="pgpSignedContent" 
+          type="textarea" 
+          label="PGP 簽署內容" 
+          hint="請貼上完整的 PGP 簽署訊息（包含 -----BEGIN PGP SIGNED MESSAGE----- 等標頭）"
+          :rows="10"
+          filled
+        />
+        <ProEditor v-else v-model="content" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="editingContent = false" />
@@ -148,7 +158,7 @@ import ListEditor from 'components/ListEditor.vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
-import { getReign, notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { getReign, notifyError, notifySuccess, parsePgpSignedMessage } from 'src/ts/utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunction } from 'boot/vuefire.ts';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
@@ -159,6 +169,8 @@ const docuId = computed(() => doc(documentsCollection(), route.params.id! as str
 const docu = useDocument(docuId);
 const content = ref('');
 const editingContent = ref(false);
+const usePgpSignature = ref(false);
+const pgpSignedContent = ref('');
 const editing = reactive({} as models.Document);
 const action = ref<'edit' | null>(null);
 const attachmentAction = ref<'add' | 'edit' | null>(null);
@@ -194,6 +206,8 @@ function edit() {
 
 function editContent() {
   content.value = (docu.value as any).content;
+  usePgpSignature.value = (docu.value as any).usePgpSignature || false;
+  pgpSignedContent.value = (docu.value as any).pgpSignedContent || '';
   editingContent.value = true;
 }
 
@@ -206,9 +220,28 @@ function editPublishedAt() {
 async function submitContent() {
   Loading.show();
   try {
-    await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
-      content: content.value,
-    });
+    const updateData: any = {};
+    
+    if (usePgpSignature.value) {
+      // Parse PGP signed message
+      try {
+        const { message, signature } = parsePgpSignedMessage(pgpSignedContent.value);
+        updateData.content = message;
+        updateData.usePgpSignature = true;
+        updateData.pgpSignedContent = pgpSignedContent.value;
+        updateData.pgpSignature = signature;
+      } catch (parseError) {
+        Loading.hide();
+        notifyError('PGP 簽署訊息解析失敗', parseError);
+        return;
+      }
+    } else {
+      updateData.content = content.value;
+      updateData.usePgpSignature = false;
+      // Don't set pgpSignedContent and pgpSignature fields - they will be deleted by the converter
+    }
+    
+    await updateDoc(doc(documentsCollection(), (docu.value as any).id), updateData);
   } catch (e) {
     notifyError('編輯失敗', e);
     Loading.hide();

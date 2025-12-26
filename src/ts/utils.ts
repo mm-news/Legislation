@@ -230,3 +230,67 @@ export function notifyError(message: string, e?: any): void {
     })
   }
 }
+
+/**
+ * Parses a PGP signed message to extract the clear text message and signature.
+ * 
+ * @param pgpMessage - The complete PGP signed message string
+ * @returns An object containing the extracted message and signature
+ * @throws {Error} If the input is invalid or the PGP message format is incorrect
+ * 
+ * Expected PGP message format:
+ * -----BEGIN PGP SIGNED MESSAGE-----
+ * Hash: SHA256
+ * 
+ * <message content>
+ * -----BEGIN PGP SIGNATURE-----
+ * <signature>
+ * -----END PGP SIGNATURE-----
+ */
+export function parsePgpSignedMessage(pgpMessage: string): { message: string; signature: string } {
+  // Validate input
+  if (!pgpMessage || typeof pgpMessage !== 'string') {
+    throw new Error('無效的輸入：PGP 訊息必須為非空字串');
+  }
+  
+  // Normalize line endings to handle Windows (\r\n) and Unix (\n) formats
+  const normalizedMessage = pgpMessage.replace(/\r\n/g, '\n');
+  
+  const beginMessage = '-----BEGIN PGP SIGNED MESSAGE-----';
+  const beginSignature = '-----BEGIN PGP SIGNATURE-----';
+  const endSignature = '-----END PGP SIGNATURE-----';
+  
+  if (!normalizedMessage.includes(beginMessage)) {
+    throw new Error('無效的 PGP 簽署訊息：缺少開始標記');
+  }
+  
+  // Find the message content
+  const messageHeaderEnd = normalizedMessage.indexOf('\n\n', normalizedMessage.indexOf(beginMessage));
+  if (messageHeaderEnd === -1) {
+    throw new Error('無效的 PGP 簽署訊息：標頭格式錯誤');
+  }
+  const messageStart = messageHeaderEnd + 2;
+  
+  const messageEnd = normalizedMessage.indexOf(beginSignature);
+  if (messageEnd === -1) {
+    throw new Error('無效的 PGP 簽署訊息：缺少簽章開始標記');
+  }
+  
+  // Extract message content between header and signature
+  // Note: trim() is used because the content will be displayed as HTML,
+  // and whitespace at the boundaries is typically not significant.
+  // The full PGP signed message is preserved in pgpSignedContent for future verification.
+  const message = normalizedMessage.substring(messageStart, messageEnd).trim();
+  
+  // Extract the full signature block
+  const signatureStart = normalizedMessage.indexOf(beginSignature);
+  const signatureEndPos = normalizedMessage.indexOf(endSignature);
+  
+  if (signatureEndPos === -1) {
+    throw new Error('無效的 PGP 簽署訊息：缺少簽章結束標記');
+  }
+  
+  const signature = normalizedMessage.substring(signatureStart, signatureEndPos + endSignature.length);
+  
+  return { message, signature };
+}
