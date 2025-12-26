@@ -6,6 +6,10 @@
     <div class="text-h6">
       <div>發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
       <div>密等：{{ doc.confidentiality.translation }}</div>
+      <div v-if="doc.usePgpSignature" class="q-mt-sm q-pa-sm bg-green-2 text-green-9 rounded-borders">
+        <q-icon name="verified" size="sm" class="q-mr-xs" />
+        簽章已驗證（TBD）
+      </div>
       <DocumentSeparator />
       <div>出席人：{{ readableTo }}</div>
       <div v-if="doc.ccSpecific.length > 0">列席人：{{ readableCC }}</div>

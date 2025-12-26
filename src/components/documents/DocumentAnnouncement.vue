@@ -5,6 +5,10 @@
     <h1 class="text-h4 q-mt-none flex-center text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }} 公告</h1>
     <div class="text-h6">發文日期：{{ doc.published ? doc.publishedAt!.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">發文字號：{{ doc.getFullId() }}</div>
+    <div v-if="doc.usePgpSignature" class="q-mt-sm q-pa-sm bg-green-2 text-green-9 rounded-borders">
+      <q-icon name="verified" size="sm" class="q-mr-xs" />
+      簽章已驗證（TBD）
+    </div>
     <DocumentSeparator />
     <div v-html="customSanitize(doc.content)"></div>
     <DocumentSeparator />

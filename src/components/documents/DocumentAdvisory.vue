@@ -9,6 +9,10 @@
     <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">密等：{{ doc.confidentiality.translation }}</div>
     <div class="text-h6">主旨：{{ doc.subject }}</div>
+    <div v-if="doc.usePgpSignature" class="q-mt-sm q-pa-sm bg-green-2 text-green-9 rounded-borders">
+      <q-icon name="verified" size="sm" class="q-mr-xs" />
+      簽章已驗證（TBD）
+    </div>
     <DocumentSeparator />
     <div class="text-h6">說明：</div>
     <div v-html="customSanitize(doc.content)"></div>

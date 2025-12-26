@@ -230,3 +230,45 @@ export function notifyError(message: string, e?: any): void {
     })
   }
 }
+
+export function parsePgpSignedMessage(pgpMessage: string): { message: string; signature: string } {
+  // Parse PGP signed message to extract the message content and signature
+  // Expected format:
+  // -----BEGIN PGP SIGNED MESSAGE-----
+  // Hash: SHA256
+  //
+  // <message content>
+  // -----BEGIN PGP SIGNATURE-----
+  // <signature>
+  // -----END PGP SIGNATURE-----
+  
+  const beginMessage = '-----BEGIN PGP SIGNED MESSAGE-----';
+  const beginSignature = '-----BEGIN PGP SIGNATURE-----';
+  const endSignature = '-----END PGP SIGNATURE-----';
+  
+  if (!pgpMessage.includes(beginMessage)) {
+    throw new Error('Invalid PGP signed message: missing BEGIN PGP SIGNED MESSAGE marker');
+  }
+  
+  // Find the message content
+  const messageStart = pgpMessage.indexOf('\n\n', pgpMessage.indexOf(beginMessage)) + 2;
+  const messageEnd = pgpMessage.indexOf(beginSignature);
+  
+  if (messageEnd === -1) {
+    throw new Error('Invalid PGP signed message: missing BEGIN PGP SIGNATURE marker');
+  }
+  
+  const message = pgpMessage.substring(messageStart, messageEnd).trim();
+  
+  // Extract the full signature block
+  const signatureStart = pgpMessage.indexOf(beginSignature);
+  const signatureEnd = pgpMessage.indexOf(endSignature) + endSignature.length;
+  
+  if (signatureEnd === -1) {
+    throw new Error('Invalid PGP signed message: missing END PGP SIGNATURE marker');
+  }
+  
+  const signature = pgpMessage.substring(signatureStart, signatureEnd);
+  
+  return { message, signature };
+}
