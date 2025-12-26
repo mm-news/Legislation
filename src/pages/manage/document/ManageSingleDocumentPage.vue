@@ -238,8 +238,7 @@ async function submitContent() {
     } else {
       updateData.content = content.value;
       updateData.usePgpSignature = false;
-      updateData.pgpSignedContent = '';
-      updateData.pgpSignature = '';
+      // Don't set pgpSignedContent and pgpSignature fields - they will be deleted by the converter
     }
     
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), updateData);

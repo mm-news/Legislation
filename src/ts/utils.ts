@@ -250,7 +250,7 @@ export function notifyError(message: string, e?: any): void {
 export function parsePgpSignedMessage(pgpMessage: string): { message: string; signature: string } {
   // Validate input
   if (!pgpMessage || typeof pgpMessage !== 'string') {
-    throw new Error('Invalid input: PGP message must be a non-empty string');
+    throw new Error('無效的輸入：PGP 訊息必須為非空字串');
   }
   
   // Normalize line endings to handle Windows (\r\n) and Unix (\n) formats
