@@ -276,6 +276,10 @@ export function parsePgpSignedMessage(pgpMessage: string): { message: string; si
     throw new Error('無效的 PGP 簽署訊息：缺少簽章開始標記');
   }
   
+  // Extract message content between header and signature
+  // Note: trim() is used because the content will be displayed as HTML,
+  // and whitespace at the boundaries is typically not significant.
+  // The full PGP signed message is preserved in pgpSignedContent for future verification.
   const message = normalizedMessage.substring(messageStart, messageEnd).trim();
   
   // Extract the full signature block
