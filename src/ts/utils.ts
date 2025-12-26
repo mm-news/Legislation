@@ -251,9 +251,13 @@ export function parsePgpSignedMessage(pgpMessage: string): { message: string; si
   }
   
   // Find the message content
-  const messageStart = pgpMessage.indexOf('\n\n', pgpMessage.indexOf(beginMessage)) + 2;
-  const messageEnd = pgpMessage.indexOf(beginSignature);
+  const messageHeaderEnd = pgpMessage.indexOf('\n\n', pgpMessage.indexOf(beginMessage));
+  if (messageHeaderEnd === -1) {
+    throw new Error('Invalid PGP signed message: malformed header');
+  }
+  const messageStart = messageHeaderEnd + 2;
   
+  const messageEnd = pgpMessage.indexOf(beginSignature);
   if (messageEnd === -1) {
     throw new Error('Invalid PGP signed message: missing BEGIN PGP SIGNATURE marker');
   }
@@ -262,13 +266,13 @@ export function parsePgpSignedMessage(pgpMessage: string): { message: string; si
   
   // Extract the full signature block
   const signatureStart = pgpMessage.indexOf(beginSignature);
-  const signatureEnd = pgpMessage.indexOf(endSignature) + endSignature.length;
+  const signatureEndPos = pgpMessage.indexOf(endSignature);
   
-  if (signatureEnd === -1) {
+  if (signatureEndPos === -1) {
     throw new Error('Invalid PGP signed message: missing END PGP SIGNATURE marker');
   }
   
-  const signature = pgpMessage.substring(signatureStart, signatureEnd);
+  const signature = pgpMessage.substring(signatureStart, signatureEndPos + endSignature.length);
   
   return { message, signature };
 }
