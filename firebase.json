@@ -50,6 +50,20 @@
           }
         },
         {
+          "source": "/feed/documents.rss",
+          "run": {
+            "serviceId": "documentsfeed",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "/feed/legislation.rss",
+          "run": {
+            "serviceId": "legislationfeed",
+            "region": "asia-east1"
+          }
+        },
+        {
           "source": "**",
           "destination": "/main.html"
         }
