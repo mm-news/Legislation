@@ -293,6 +293,82 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
   }
 });
 
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function buildRssFeed(title: string, link: string, description: string, items: string[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>${escapeXml(title)}</title>
+    <link>${link}</link>
+    <description>${escapeXml(description)}</description>
+    <language>zh-tw</language>
+${items.join('\n')}
+  </channel>
+</rss>`;
+}
+
+export const documentsFeed = onRequest(globalFunctionOptions, async (request, response) => {
+  response.header('Content-Type', 'application/rss+xml; charset=utf-8');
+  try {
+    const snapshot = await db.collection('documents')
+      .where('published', '==', true)
+      .where('confidentiality', '==', 'Public')
+      .orderBy('publishedAt', 'desc')
+      .limit(20)
+      .get();
+    const items = snapshot.docs.map((document) => {
+      const data = document.data();
+      const url = `https://law.cksc.tw/document/${encodeURIComponent(document.id)}`;
+      const pubDate = (data.publishedAt ?? data.createdAt)?.toDate().toUTCString() ?? new Date().toUTCString();
+      return `    <item>
+      <title>${escapeXml(data.subject)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${escapeXml(data.subject)}</description>
+    </item>`;
+    });
+    response.send(buildRssFeed('建中班聯會法律與公文系統 - 公文', 'https://law.cksc.tw/document', '建國中學班聯會公開公文', items));
+  } catch (e) {
+    console.error(e);
+    response.status(500).end();
+  }
+});
+
+export const legislationFeed = onRequest(globalFunctionOptions, async (request, response) => {
+  response.header('Content-Type', 'application/rss+xml; charset=utf-8');
+  try {
+    const snapshot = await db.collection('legislation')
+      .orderBy('createdAt', 'desc')
+      .limit(20)
+      .get();
+    const items = snapshot.docs.map((document) => {
+      const data = document.data();
+      const url = `https://law.cksc.tw/legislation/${document.id}`;
+      const pubDate = data.createdAt?.toDate().toUTCString() ?? new Date().toUTCString();
+      return `    <item>
+      <title>${escapeXml(data.name)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${escapeXml(data.name)}</description>
+    </item>`;
+    });
+    response.send(buildRssFeed('建中班聯會法律與公文系統 - 法令', 'https://law.cksc.tw/legislation', '建國中學班聯會法令', items));
+  } catch (e) {
+    console.error(e);
+    response.status(500).end();
+  }
+});
+
 export const updateIdCache = onDocumentWritten(
   { ...globalFunctionOptions, document: '{type}/{docId}', },
   async (event) => {
