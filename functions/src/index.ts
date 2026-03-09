@@ -25,6 +25,7 @@ import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as utf8 from 'utf8';
+import { buildRssFeed, escapeXml } from './rss';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const auth = new google.auth.GoogleAuth({
@@ -292,28 +293,6 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
     response.status(500).end()
   }
 });
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-function buildRssFeed(title: string, link: string, description: string, items: string[]): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>${escapeXml(title)}</title>
-    <link>${link}</link>
-    <description>${escapeXml(description)}</description>
-    <language>zh-tw</language>
-${items.join('\n')}
-  </channel>
-</rss>`;
-}
 
 export const documentsFeed = onRequest(globalFunctionOptions, async (request, response) => {
   response.header('Content-Type', 'application/rss+xml; charset=utf-8');
