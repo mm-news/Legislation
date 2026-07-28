@@ -44,7 +44,7 @@ export interface Document {
   published: boolean;
   publishedAt?: Date | null;
   meetingTime?: Date | null;
-  prosecutionId?: string;
+  prosecutionId?: string; // 啟字 document ID or case ID
   plaintiff: string;
   Defendant: string;
   AbsentMeeting1: string;
