@@ -32,6 +32,7 @@
                     v-if="change.status === 'modified'"
                     :old-string="change.originalContent?.content || ''"
                     :new-string="change.current.content || ''"
+                    diff-view="added"
                     render-lines
                   />
                   <InlineDiffRenderer v-else :old-string="change.current.content || ''" :new-string="change.current.content || ''" render-lines />
@@ -44,6 +45,7 @@
                     v-if="change.status === 'modified'"
                     :old-string="change.originalContent?.content || ''"
                     :new-string="change.current.content || ''"
+                    diff-view="added"
                     render-lines
                   />
                   <InlineDiffRenderer v-else :old-string="change.current.content || ''" :new-string="change.current.content || ''" render-lines />
@@ -66,7 +68,8 @@
                 <div>
                   <InlineDiffRenderer
                     :old-string="change.originalContent?.content || ''"
-                    :new-string="change.originalContent?.content || ''"
+                    :new-string="change.current.content || ''"
+                    diff-view="removed"
                     render-lines
                   />
                 </div>

@@ -17,7 +17,7 @@
     </div>
   </div>
   <span v-else class="inline-diff" style="white-space: break-spaces">
-    <template v-for="(part, i) in diffs" :key="i">
+    <template v-for="(part, i) in visibleDiffs" :key="i">
       <del v-if="part.removed" class="diff-removed">{{ part.value }}</del>
       <ins v-else-if="part.added" class="diff-added">{{ part.value }}</ins>
       <span v-else>{{ part.value }}</span>
@@ -33,10 +33,17 @@ const props = defineProps<{
   oldString: string;
   newString: string;
   renderLines?: boolean;
+  diffView?: 'both' | 'added' | 'removed';
 }>();
 
 const diffs = computed(() => {
   return diffChars(props.oldString || '', props.newString || '');
+});
+
+const visibleDiffs = computed(() => {
+  if (props.diffView === 'added') return diffs.value.filter((part) => !part.removed);
+  if (props.diffView === 'removed') return diffs.value.filter((part) => !part.added);
+  return diffs.value;
 });
 
 const renderedLines = computed(() => {
@@ -44,7 +51,7 @@ const renderedLines = computed(() => {
   let currentParts: any[] = [];
   let currentText = '';
 
-  for (const part of diffs.value) {
+  for (const part of visibleDiffs.value) {
     const segments = (part.value || '').split('\n');
     for (let i = 0; i < segments.length; i++) {
       if (i > 0) {
@@ -55,13 +62,13 @@ const renderedLines = computed(() => {
       const segment = segments[i];
       if (segment && segment.length > 0) {
         currentParts.push({ ...part, value: segment });
-        if (!part.removed) {
+        if (props.diffView === 'removed' || !part.removed) {
           currentText += segment;
         }
       }
     }
   }
-  if (currentParts.length > 0 || diffs.value.length === 0) {
+  if (currentParts.length > 0 || visibleDiffs.value.length === 0) {
     lines.push({ parts: currentParts, text: currentText });
   }
   return lines;
